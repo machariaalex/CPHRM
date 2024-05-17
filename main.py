@@ -1,17 +1,15 @@
 import streamlit as st
 import pandas as pd
-import requests
-from io import BytesIO
+import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 # Set the page config
-st.set_page_config(page_title='Data Visualizer',
-                   layout='wide',
-                   page_icon='📊')
+st.set_page_config(page_title='Data Visualizer', layout='wide', page_icon='📊')
 
 # Title
-st.title('📊 Data Visualizer')
+st.title('📊 CPHRM')
 
 # Sidebar radio button for selecting between About and Visualization
 menu_selection = st.sidebar.radio("Menu", ["About", "Visualization"])
@@ -27,64 +25,105 @@ elif menu_selection == "Visualization":
 
     # Fetch the contents of the repository
     response = requests.get(repo_url)
-    contents = response.json()
+    if response.status_code != 200:
+        st.error("Error fetching data from GitHub.")
+    else:
+        contents = response.json()
 
-    # Filter for Excel files
-    files = [file['name'] for file in contents if file['name'].endswith('.xlsx')]
+        # Filter for Excel files
+        files = [file['name'] for file in contents if file['name'].endswith('.xlsx')]
 
-    # Dropdown to select a file
-    selected_file = st.sidebar.selectbox('Select a file', files, index=None)
+        # Dropdown to select a file
+        selected_file = st.sidebar.selectbox('Select a file', files, index=None)
 
-    if selected_file:
-        # Fetch the raw content of the selected file
-        file_response = requests.get(f"https://raw.githubusercontent.com/machariaalex/CPHRM/main/{selected_file}")
-        file_content = BytesIO(file_response.content)
+        if selected_file:
+            # Fetch the raw content of the selected file
+            file_url = f"https://raw.githubusercontent.com/machariaalex/CPHRM/main/{selected_file}"
+            file_content = requests.get(file_url).content
 
-        # Read the selected Excel file
-        df = pd.read_excel(file_content)
+            # Read the selected Excel file
+            df = pd.read_excel(io.BytesIO(file_content))
 
-        col1, col2 = st.columns(2)
+            col1, col2 = st.columns(2)
 
-        columns = df.columns.tolist()
+            columns = df.columns.tolist()
 
-        with col1:
-            st.write("")
-            st.write(df.head())
+            with col1:
+                st.write("")
+                st.write(df.head())
 
-        with col2:
-            # Allow the user to select columns for plotting
-            x_axis = st.selectbox('Select the X-axis', options=columns+["None"])
-            y_axis = st.selectbox('Select the Y-axis', options=columns+["None"])
+            with col2:
+                # Plot type options
+                plot_list = [
+                    'Bar Chart',
+                    'Stacked Bar Chart',
+                    'Line Plot',
+                    'Pie Chart',
+                    'Horizontal Bar Chart'
+                ]
+                # Allow the user to select the type of plot
+                plot_type = st.selectbox('Select the type of plot', options=plot_list)
 
-            plot_list = ['Line Plot', 'Bar Chart', 'Scatter Plot', 'Distribution Plot', 'Count Plot', 'Pie Chart']
-            # Allow the user to select the type of plot
-            plot_type = st.selectbox('Select the type of plot', options=plot_list)
+            # Generate the plot based on user selection
+            if plot_type:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                if plot_type == 'Bar Chart':
+                    # Plot bar chart
+                    plot_bar_chart(df, ax)
+                elif plot_type == 'Stacked Bar Chart':
+                    # Plot stacked bar chart
+                    plot_stacked_bar_chart(df, ax)
+                elif plot_type == 'Line Plot':
+                    # Plot line plot
+                    plot_line_plot(df, ax)
+                elif plot_type == 'Pie Chart':
+                    # Plot pie chart
+                    plot_pie_chart(df, ax)
+                elif plot_type == 'Horizontal Bar Chart':
+                    # Plot horizontal bar chart
+                    plot_horizontal_bar_chart(df, ax)
+                
+                st.pyplot(fig)
 
-        # Generate the plot based on user selection
-        if st.button('Generate Plot'):
-            fig, ax = plt.subplots(figsize=(6, 4))
+def plot_bar_chart(df, ax):
+    # Plot bar chart
+    sns.barplot(x='District', y='Total Households', data=df, color='blue', label='Total Households', ax=ax)
+    sns.barplot(x='District', y='Total Number Correct Match', data=df, color='green', label='Correct Match', ax=ax)
+    sns.barplot(x='District', y='Total Number of Mismatch', data=df, color='red', label='Mismatch', ax=ax)
+    plt.legend()
+    plt.title('Total Households, Correct Matches, and Mismatches by District')
+    plt.xticks(rotation=45)
 
-            if plot_type == 'Line Plot':
-                sns.lineplot(x=df[x_axis], y=df[y_axis], ax=ax)
-            elif plot_type == 'Bar Chart':
-                sns.barplot(x=df[x_axis], y=df[y_axis], ax=ax)
-            elif plot_type == 'Scatter Plot':
-                sns.scatterplot(x=df[x_axis], y=df[y_axis], ax=ax)
-            elif plot_type == 'Distribution Plot':
-                sns.histplot(df[x_axis], kde=True, ax=ax)
-                y_axis = 'Density'
-            elif plot_type == 'Count Plot':
-                sns.countplot(x=df[x_axis], ax=ax)
-                y_axis = 'Count'
-            elif plot_type == 'Pie Chart':
-                # Pie chart requires only one column for data and labels
-                if x_axis != "None" and y_axis == "None":
-                    data = df[x_axis].value_counts()
-                    labels = data.index.tolist()
-                    sizes = data.values.tolist()
-                    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
-                    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-                    plt.title(f'Pie Chart of {x_axis}')
-                    st.pyplot(fig)
-                else:
-                    st.write("For Pie Chart, please select only one column for data (X-axis) and 'None' for Y-axis.")
+def plot_stacked_bar_chart(df, ax):
+    # Plot stacked bar chart
+    sns.barplot(x='District', y='Total Number Correct Match', data=df, color='green', label='Correct Match', ax=ax)
+    sns.barplot(x='District', y='Total Number of Mismatch', data=df, color='red', bottom=df['Total Number Correct Match'], label='Mismatch', ax=ax)
+    plt.legend()
+    plt.title('Total Households Breakdown by District')
+    plt.xticks(rotation=45)
+
+def plot_line_plot(df, ax):
+    # Plot line plot
+    sns.lineplot(x='District', y='% Change', data=df, marker='o', ax=ax)
+    plt.title('Percentage Change of Water Source Mismatches by District')
+    plt.xlabel('District')
+    plt.ylabel('% Change')
+    plt.xticks(rotation=45)
+
+def plot_pie_chart(df, ax):
+    # Plot pie chart
+    totals = df[df['District'] == 'Totals']
+    sizes = [totals['Total Number Correct Match'].values[0], totals['Total Number of Mismatch'].values[0]]
+    labels = ['Correct Match', 'Mismatch']
+    colors = ['green', 'red']
+
+    plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+    plt.title('Overall Correct Matches vs Mismatches')
+    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+def plot_horizontal_bar_chart(df, ax):
+    # Plot horizontal bar chart
+    sns.barplot(y='District', x='% Change', data=df, palette='coolwarm', ax=ax)
+    plt.title('Percentage Change of Water Source Mismatches by District')
+    plt.xlabel('% Change')
+    plt.ylabel('District')

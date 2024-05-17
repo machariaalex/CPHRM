@@ -101,7 +101,7 @@ elif menu_selection == "Visualization":
 
                 plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
                 plt.title('Overall Correct Matches vs Mismatches')
-                plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+                plt.axis('equal')
 
             elif plot_type == 'Horizontal Bar Chart':
                 sns.barplot(y='District', x='% Change', data=df, palette='coolwarm', ax=ax)

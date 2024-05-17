@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import os
+import requests
+from io import BytesIO
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -21,23 +22,26 @@ if menu_selection == "About":
              "Select 'Visualization' from the sidebar to explore the data.")
 
 elif menu_selection == "Visualization":
-    working_dir = os.path.dirname(os.path.abspath(__file__))
+    # Specify the GitHub repository URL
+    repo_url = "https://github.com/machariaalex/CPHRM"
 
-    # Specify the folder where your Excel files are located
-    folder_path = "https://github.com/machariaalex/CPHRM/tree/main"  # Update this to your folder path
+    # Fetch the contents of the repository
+    response = requests.get(repo_url + "/contents/")
+    contents = response.json()
 
-    # List all files in the folder
-    files = [f for f in os.listdir(folder_path) if f.endswith('.xlsx')]
+    # Filter for Excel files
+    files = [file['name'] for file in contents if file['name'].endswith('.xlsx')]
 
     # Dropdown to select a file
     selected_file = st.sidebar.selectbox('Select a file', files, index=None)
 
     if selected_file:
-        # Construct the full path to the file
-        file_path = os.path.join(folder_path, selected_file)
+        # Fetch the raw content of the selected file
+        file_response = requests.get(repo_url + "/raw/main/" + selected_file)
+        file_content = BytesIO(file_response.content)
 
         # Read the selected Excel file
-        df = pd.read_excel(file_path)
+        df = pd.read_excel(file_content)
 
         col1, col2 = st.columns(2)
 

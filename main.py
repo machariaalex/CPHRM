@@ -11,7 +11,7 @@ st.set_page_config(page_title='Data Visualizer',
                    page_icon='📊')
 
 # Title
-st.title('📊 Data Visualizer')
+st.title('📊 CPHRM')
 
 # Sidebar radio button for selecting between About and Visualization
 menu_selection = st.sidebar.radio("Menu", ["About", "Visualization"])
@@ -31,6 +31,9 @@ elif menu_selection == "Visualization":
 
     # Filter for Excel files
     files = [file['name'] for file in contents if file['name'].endswith('.xlsx')]
+
+    # Debug statement to check files variable
+    st.write("Files:", files)
 
     # Dropdown to select a file
     selected_file = st.sidebar.selectbox('Select a file', files, index=None)

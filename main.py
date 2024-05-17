@@ -36,10 +36,6 @@ elif menu_selection == "Visualization":
             st.write("")
             st.write(df.head())
 
-            # Summary statistics
-            st.subheader("Summary Statistics")
-            st.write(df.describe())
-
         with col2:
             # Plot type options
             plot_list = [

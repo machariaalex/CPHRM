@@ -23,10 +23,10 @@ if menu_selection == "About":
 
 elif menu_selection == "Visualization":
     # Specify the GitHub repository URL
-    repo_url = "https://github.com/machariaalex/CPHRM"
+    repo_url = "https://api.github.com/repos/machariaalex/CPHRM/contents"
 
     # Fetch the contents of the repository
-    response = requests.get(repo_url + "/contents/")
+    response = requests.get(repo_url)
     contents = response.json()
 
     # Filter for Excel files
@@ -37,7 +37,7 @@ elif menu_selection == "Visualization":
 
     if selected_file:
         # Fetch the raw content of the selected file
-        file_response = requests.get(repo_url + "/raw/main/" + selected_file)
+        file_response = requests.get(f"https://raw.githubusercontent.com/machariaalex/CPHRM/main/{selected_file}")
         file_content = BytesIO(file_response.content)
 
         # Read the selected Excel file

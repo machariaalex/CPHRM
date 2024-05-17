@@ -24,7 +24,7 @@ elif menu_selection == "Visualization":
     working_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Specify the folder where your Excel files are located
-    folder_path = "/home/ndegwa/CPHRM/Districts"  # Update this to your folder path
+    folder_path = "https://github.com/machariaalex/CPHRM/tree/main"  # Update this to your folder path
 
     # List all files in the folder
     files = [f for f in os.listdir(folder_path) if f.endswith('.xlsx')]

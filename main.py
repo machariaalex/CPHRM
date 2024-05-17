@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
-from io import BytesIO
+from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -11,7 +11,7 @@ st.set_page_config(page_title='Data Visualizer',
                    page_icon='📊')
 
 # Title
-st.title('📊 CPHRM')
+st.title('📊 Data Visualizer')
 
 # Sidebar radio button for selecting between About and Visualization
 menu_selection = st.sidebar.radio("Menu", ["About", "Visualization"])
@@ -23,28 +23,29 @@ if menu_selection == "About":
 
 elif menu_selection == "Visualization":
     # Specify the GitHub repository URL
-    repo_url = "https://api.github.com/repos/machariaalex/CPHRM/contents"
+    repo_url = "https://github.com/machariaalex/CPHRM/tree/main"
 
-    # Fetch the contents of the repository
-    response = requests.get(repo_url)
-    contents = response.json()
+    # Fetch the contents of the repository page
+    page_content = requests.get(repo_url).content
+
+    # Parse the HTML content
+    soup = BeautifulSoup(page_content, 'html.parser')
+
+    # Find all links in the page
+    links = soup.find_all('a', href=True)
 
     # Filter for Excel files
-    files = [file['name'] for file in contents if file['name'].endswith('.xlsx')]
-
-    # Debug statement to check files variable
-    st.write("Files:", files)
+    files = [link['href'].split('/')[-1] for link in links if link['href'].endswith('.xlsx')]
 
     # Dropdown to select a file
     selected_file = st.sidebar.selectbox('Select a file', files, index=None)
 
     if selected_file:
-        # Fetch the raw content of the selected file
-        file_response = requests.get(f"https://raw.githubusercontent.com/machariaalex/CPHRM/main/{selected_file}")
-        file_content = BytesIO(file_response.content)
+        # Construct the full URL to the selected file
+        file_url = f"{repo_url}/{selected_file}"
 
         # Read the selected Excel file
-        df = pd.read_excel(file_content)
+        df = pd.read_excel(file_url)
 
         col1, col2 = st.columns(2)
 

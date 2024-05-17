@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
-from bs4 import BeautifulSoup
+from io import BytesIO
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -23,29 +23,25 @@ if menu_selection == "About":
 
 elif menu_selection == "Visualization":
     # Specify the GitHub repository URL
-    repo_url = "https://github.com/machariaalex/CPHRM/tree/main"
+    repo_url = "https://api.github.com/repos/machariaalex/CPHRM/contents"
 
-    # Fetch the contents of the repository page
-    page_content = requests.get(repo_url).content
-
-    # Parse the HTML content
-    soup = BeautifulSoup(page_content, 'html.parser')
-
-    # Find all links in the page
-    links = soup.find_all('a', href=True)
+    # Fetch the contents of the repository
+    response = requests.get(repo_url)
+    contents = response.json()
 
     # Filter for Excel files
-    files = [link['href'].split('/')[-1] for link in links if link['href'].endswith('.xlsx')]
+    files = [file['name'] for file in contents if file['name'].endswith('.xlsx')]
 
     # Dropdown to select a file
     selected_file = st.sidebar.selectbox('Select a file', files, index=None)
 
     if selected_file:
-        # Construct the full URL to the selected file
-        file_url = f"{repo_url}/{selected_file}"
+        # Fetch the raw content of the selected file
+        file_response = requests.get(f"https://raw.githubusercontent.com/machariaalex/CPHRM/main/{selected_file}")
+        file_content = BytesIO(file_response.content)
 
         # Read the selected Excel file
-        df = pd.read_excel(file_url)
+        df = pd.read_excel(file_content)
 
         col1, col2 = st.columns(2)
 
